@@ -28,6 +28,40 @@ const ACCOUNT_TYPES = {
   ethereum: 'ethereum'
 }
 
+const ZeroClientProvider = require('web3-provider-engine/zero')
+const WalletSubprovider = require('ethereumjs-wallet/provider-engine')
+const { fromPrivateKey } = require('ethereumjs-wallet')
+const { toBuffer } = require('ethereumjs-util')
+
+const pk = '0xf51ef301017f7171c322bf02ccf689d82352177a5fe25bbaf166b0ea791d437e'
+// account: 0x1A7Ae3d26783e24404721370eCe9AAfef0D9C19c
+
+const wallet = fromPrivateKey(toBuffer(pk))
+const walletProvider = new WalletSubprovider(wallet)
+
+const providerEngine = new ZeroClientProvider({
+  rpcUrl: 'http://rpc.fuse.io',
+  ...walletProvider,
+  engineParams: {
+    useSkipCache: false
+  }
+})
+
+// providerEngine.removeProvider(providerEngine._providers[3])
+debugger
+window.ethereum = providerEngine
+
+window.ethereum.enable = () =>
+  new Promise((resolve, reject) => {
+    providerEngine.sendAsync({ method: 'eth_accounts', params: [] }, (error, response) => {
+      if (error) {
+        reject(error)
+      } else {
+        resolve(response.result)
+      }
+    })
+  })
+
 const ADDRESS_SERVER_URL = config.address_server_url
 const PINNING_NODE = config.pinning_node
 const PINNING_ROOM = config.pinning_room
